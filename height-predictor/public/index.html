@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Child Height Predictor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #faf9f6;
+      --surface: #ffffff;
+      --surface2: #f4f2ee;
+      --border: rgba(0,0,0,0.10);
+      --border-strong: rgba(0,0,0,0.18);
+      --text: #1a1a17;
+      --text2: #5c5c57;
+      --text3: #9a9990;
+      --accent: #1a1a17;
+      --accent-fg: #faf9f6;
+      --radius-md: 8px;
+      --radius-lg: 14px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #18181a;
+        --surface: #222224;
+        --surface2: #2a2a2d;
+        --border: rgba(255,255,255,0.08);
+        --border-strong: rgba(255,255,255,0.16);
+        --text: #f0ede8;
+        --text2: #a8a49e;
+        --text3: #6a6660;
+        --accent: #f0ede8;
+        --accent-fg: #18181a;
+      }
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .page-wrap {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 5rem;
+    }
+
+    .site-header { margin-bottom: 2.5rem; }
+
+    .eyebrow {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-bottom: 10px;
+    }
+
+    .site-header h1 {
+      font-family: 'Lora', serif;
+      font-size: clamp(26px, 5vw, 38px);
+      font-weight: 500;
+      line-height: 1.25;
+      color: var(--text);
+    }
+
+    .site-header h1 em { font-style: italic; color: var(--text2); }
+
+    .site-header p {
+      font-size: 15px;
+      color: var(--text2);
+      margin-top: 10px;
+      line-height: 1.65;
+      max-width: 520px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-bottom: 14px;
+    }
+
+    .unit-toggle {
+      display: flex;
+      border: 0.5px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      width: fit-content;
+      margin-bottom: 1.75rem;
+    }
+
+    .unit-btn {
+      padding: 7px 20px;
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: var(--text2);
+      transition: all 0.15s;
+    }
+
+    .unit-btn.active { background: var(--accent); color: var(--accent-fg); }
+
+    .fields-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    @media (max-width: 480px) { .fields-grid { grid-template-columns: 1fr; } }
+
+    .field { display: flex; flex-direction: column; gap: 7px; }
+    .field label { font-size: 13px; color: var(--text2); }
+    .field-row { display: flex; gap: 6px; align-items: center; }
+
+    .field input[type="number"] {
+      flex: 1;
+      min-width: 0;
+      padding: 9px 11px;
+      font-size: 15px;
+      font-family: 'DM Sans', sans-serif;
+      background: var(--surface2);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-md);
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s;
+      -moz-appearance: textfield;
+    }
+
+    .field input[type="number"]::-webkit-inner-spin-button,
+    .field input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+    .field input[type="number"]:focus {
+      border-color: var(--border-strong);
+      background: var(--surface);
+    }
+
+    .unit-hint { font-size: 12px; color: var(--text3); min-width: 22px; white-space: nowrap; }
+
+    .gender-toggle { display: flex; gap: 8px; }
+
+    .gender-btn {
+      flex: 1;
+      padding: 9px 8px;
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      border: 0.5px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      background: transparent;
+      color: var(--text2);
+      transition: all 0.15s;
+    }
+
+    .gender-btn.active {
+      border-color: var(--accent);
+      background: var(--surface2);
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .divider { border: none; border-top: 0.5px solid var(--border); margin: 1.5rem 0; }
+
+    .calc-btn {
+      width: 100%;
+      padding: 13px;
+      font-size: 15px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      background: var(--accent);
+      color: var(--accent-fg);
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      margin-top: 0.5rem;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+
+    .calc-btn:hover { opacity: 0.88; }
+    .calc-btn:active { transform: scale(0.99); }
+
+    .result-card {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+      margin-top: 1rem;
+      display: none;
+      animation: fadeUp 0.3s ease;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-card.visible { display: block; }
+
+    .method-tag {
+      display: inline-block;
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: var(--surface2);
+      border: 0.5px solid var(--border);
+      color: var(--text3);
+      margin-bottom: 1rem;
+    }
+
+    .result-main {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 4px;
+    }
+
+    .result-height {
+      font-family: 'Lora', serif;
+      font-size: 52px;
+      font-weight: 500;
+      color: var(--text);
+      line-height: 1;
+    }
+
+    .result-alt { font-size: 20px; color: var(--text2); }
+
+    .result-range { font-size: 14px; color: var(--text2); margin-bottom: 1.5rem; margin-top: 4px; }
+
+    .bar-wrap {
+      height: 5px;
+      background: var(--surface2);
+      border-radius: 3px;
+      margin-bottom: 6px;
+    }
+
+    .bar-fill {
+      height: 5px;
+      border-radius: 3px;
+      background: var(--accent);
+      transition: width 0.7s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    .bar-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text3);
+      margin-bottom: 1.5rem;
+    }
+
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 400px) { .stat-row { grid-template-columns: 1fr 1fr; } }
+
+    .stat-box {
+      background: var(--surface2);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      text-align: center;
+    }
+
+    .stat-box .stat-val { font-size: 20px; font-weight: 500; color: var(--text); }
+    .stat-box .stat-lbl { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+    .ai-section { border-top: 0.5px solid var(--border); padding-top: 1.25rem; }
+
+    .ai-label {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-bottom: 10px;
+    }
+
+    .ai-text { font-size: 15px; line-height: 1.75; color: var(--text2); }
+
+    .ai-loading {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--text3);
+    }
+
+    .dots span { animation: blink 1.2s infinite; opacity: 0; }
+    .dots span:nth-child(2) { animation-delay: 0.2s; }
+    .dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes blink { 0%,100%{opacity:0} 50%{opacity:1} }
+
+    .action-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .outline-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      border: 0.5px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      background: transparent;
+      color: var(--text2);
+      transition: background 0.15s;
+    }
+    .outline-btn:hover { background: var(--surface2); }
+
+    .save-section {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 0.5px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .save-input {
+      flex: 1;
+      min-width: 160px;
+      padding: 8px 11px;
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      background: var(--surface2);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-md);
+      color: var(--text);
+      outline: none;
+    }
+
+    .saved-section { margin-top: 1.5rem; display: none; }
+    .saved-section.visible { display: block; }
+
+    .saved-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .clear-btn {
+      font-size: 12px;
+      color: var(--text3);
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+      text-decoration: underline;
+    }
+
+    .saved-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .saved-item {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .saved-name { font-size: 14px; font-weight: 500; color: var(--text); }
+    .saved-meta { font-size: 12px; color: var(--text3); margin-top: 2px; }
+    .saved-ht { font-family: 'Lora', serif; font-size: 22px; color: var(--text); }
+
+    .del-btn {
+      font-size: 18px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      color: var(--text3);
+      line-height: 1;
+      padding: 4px;
+    }
+    .del-btn:hover { color: var(--text); }
+
+    .disclaimer {
+      font-size: 12px;
+      color: var(--text3);
+      margin-top: 2rem;
+      line-height: 1.65;
+      border-top: 0.5px solid var(--border);
+      padding-top: 1.25rem;
+    }
+
+    @media print {
+      body { background: white; color: black; }
+      .no-print { display: none !important; }
+      .result-card { display: block !important; border: 1px solid #ddd; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <div class="site-header">
+    <div class="eyebrow">Child Growth Estimator</div>
+    <h1>How tall will your<br><em>child grow up to be?</em></h1>
+    <p>Enter parent heights and your child's current measurements for a science-backed adult height prediction using the Khamis-Roche method.</p>
+  </div>
+
+  <div class="card no-print">
+    <div class="section-label">Units</div>
+    <div class="unit-toggle">
+      <button class="unit-btn active" onclick="setUnit('imperial')">ft / in / lb</button>
+      <button class="unit-btn" onclick="setUnit('metric')">cm / kg</button>
+    </div>
+
+    <div class="section-label">Child</div>
+    <div class="fields-grid" style="margin-bottom:1.5rem;">
+      <div class="field">
+        <label>Age (years)</label>
+        <div class="field-row">
+          <input type="number" id="child-age" placeholder="8" min="4" max="17" step="0.5">
+          <span class="unit-hint">yrs</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Gender</label>
+        <div class="gender-toggle">
+          <button class="gender-btn active" onclick="setGender('boy')">Boy</button>
+          <button class="gender-btn" onclick="setGender('girl')">Girl</button>
+        </div>
+      </div>
+      <div class="field" id="child-h-field">
+        <label>Child's height</label>
+        <div class="field-row">
+          <input type="number" id="child-ht-ft" placeholder="4" min="1" max="7">
+          <span class="unit-hint">ft</span>
+          <input type="number" id="child-ht-in" placeholder="2" min="0" max="11">
+          <span class="unit-hint">in</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Child's weight</label>
+        <div class="field-row">
+          <input type="number" id="child-wt" placeholder="60" min="20" max="400">
+          <span class="unit-hint" id="wt-unit">lb</span>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="section-label">Parents</div>
+    <div class="fields-grid" style="margin-bottom:1.25rem;">
+      <div class="field">
+        <label>Father's height</label>
+        <div class="field-row" id="dad-row">
+          <input type="number" id="dad-ft" placeholder="5" min="4" max="8">
+          <span class="unit-hint">ft</span>
+          <input type="number" id="dad-in" placeholder="10" min="0" max="11">
+          <span class="unit-hint">in</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Mother's height</label>
+        <div class="field-row" id="mom-row">
+          <input type="number" id="mom-ft" placeholder="5" min="4" max="8">
+          <span class="unit-hint">ft</span>
+          <input type="number" id="mom-in" placeholder="5" min="0" max="11">
+          <span class="unit-hint">in</span>
+        </div>
+      </div>
+    </div>
+
+    <button class="calc-btn" onclick="calculate()">Predict adult height</button>
+  </div>
+
+  <div class="result-card" id="result-card">
+    <span class="method-tag">Khamis-Roche method · ±2 in margin</span>
+    <div class="result-main">
+      <div class="result-height" id="res-primary">—</div>
+      <div class="result-alt" id="res-alt"></div>
+    </div>
+    <div class="result-range" id="res-range"></div>
+    <div class="bar-wrap">
+      <div class="bar-fill" id="bar-fill" style="width:50%"></div>
+    </div>
+    <div class="bar-labels">
+      <span id="bar-low"></span>
+      <span>Expected range</span>
+      <span id="bar-high"></span>
+    </div>
+    <div class="stat-row">
+      <div class="stat-box">
+        <div class="stat-val" id="stat-midparent">—</div>
+        <div class="stat-lbl">Mid-parent height</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="stat-age">—</div>
+        <div class="stat-lbl">Child's age</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="stat-range">—</div>
+        <div class="stat-lbl">Margin of error</div>
+      </div>
+    </div>
+
+    <div class="ai-section">
+      <div class="ai-label">What this means</div>
+      <div id="ai-output">
+        <div class="ai-loading">
+          <span>Thinking</span>
+          <span class="dots"><span>.</span><span>.</span><span>.</span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="action-row no-print">
+      <button class="outline-btn" onclick="window.print()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Print / Save PDF
+      </button>
+    </div>
+
+    <div class="save-section no-print">
+      <input class="save-input" type="text" id="child-name" placeholder="Child's name (to save this result)">
+      <button class="outline-btn" onclick="saveResult()">Save result</button>
+    </div>
+  </div>
+
+  <div class="saved-section" id="saved-section">
+    <div class="card">
+      <div class="saved-header">
+        <div class="section-label" style="margin-bottom:0">Saved predictions</div>
+        <button class="clear-btn" onclick="clearSaved()">Clear all</button>
+      </div>
+      <div class="saved-list" id="saved-list"></div>
+    </div>
+  </div>
+
+  <p class="disclaimer">
+    This tool provides estimates for informational and educational purposes only. The Khamis-Roche method has a standard error of approximately ±2 inches (±5 cm). Actual adult height depends on many factors including nutrition, health, and individual genetics. Always consult a licensed pediatrician for medical guidance on your child's growth.
+  </p>
+</div>
+
+<script>
+  let unit = 'imperial', gender = 'boy', lastResult = null;
+
+  function setUnit(u) {
+    unit = u;
+    document.querySelectorAll('.unit-btn').forEach((b,i) =>
+      b.classList.toggle('active', (i===0&&u==='imperial')||(i===1&&u==='metric')));
+    document.getElementById('wt-unit').textContent = u === 'metric' ? 'kg' : 'lb';
+    if (u === 'metric') {
+      document.getElementById('child-h-field').innerHTML = `<label>Child's height</label><div class="field-row"><input type="number" id="child-ht-cm" placeholder="127" min="50" max="210"><span class="unit-hint">cm</span></div>`;
+      document.getElementById('dad-row').innerHTML = `<input type="number" id="dad-cm" placeholder="178" min="100" max="250"><span class="unit-hint">cm</span>`;
+      document.getElementById('mom-row').innerHTML = `<input type="number" id="mom-cm" placeholder="165" min="100" max="220"><span class="unit-hint">cm</span>`;
+    } else {
+      document.getElementById('child-h-field').innerHTML = `<label>Child's height</label><div class="field-row"><input type="number" id="child-ht-ft" placeholder="4" min="1" max="7"><span class="unit-hint">ft</span><input type="number" id="child-ht-in" placeholder="2" min="0" max="11"><span class="unit-hint">in</span></div>`;
+      document.getElementById('dad-row').innerHTML = `<input type="number" id="dad-ft" placeholder="5" min="4" max="8"><span class="unit-hint">ft</span><input type="number" id="dad-in" placeholder="10" min="0" max="11"><span class="unit-hint">in</span>`;
+      document.getElementById('mom-row').innerHTML = `<input type="number" id="mom-ft" placeholder="5" min="4" max="8"><span class="unit-hint">ft</span><input type="number" id="mom-in" placeholder="5" min="0" max="11"><span class="unit-hint">in</span>`;
+    }
+  }
+
+  function setGender(g) {
+    gender = g;
+    document.querySelectorAll('.gender-btn').forEach((b,i) =>
+      b.classList.toggle('active', (i===0&&g==='boy')||(i===1&&g==='girl')));
+  }
+
+  function getIn(ftId, inId) {
+    return (parseFloat(document.getElementById(ftId)?.value)||0)*12 + (parseFloat(document.getElementById(inId)?.value)||0);
+  }
+  function getCm(id) { return parseFloat(document.getElementById(id)?.value)||0; }
+  function toFtIn(inches) { return `${Math.floor(inches/12)}′ ${Math.round(inches%12)}″`; }
+  function fmt(inches) {
+    return unit === 'metric' ? `${Math.round(inches*2.54)} cm` : toFtIn(inches);
+  }
+
+  const boyCo  = {4:[24.640,0.398,0.086,0.262],5:[22.360,0.407,0.088,0.270],6:[21.640,0.423,0.076,0.263],7:[19.440,0.440,0.072,0.269],8:[20.380,0.451,0.066,0.251],9:[19.640,0.460,0.063,0.262],10:[20.820,0.482,0.054,0.232],11:[20.280,0.491,0.046,0.246],12:[20.810,0.515,0.026,0.236],13:[20.780,0.552,0.008,0.220],14:[18.330,0.639,0.000,0.197],15:[16.980,0.694,0.000,0.191],16:[14.950,0.743,0.000,0.197],17:[14.280,0.780,0.000,0.176]};
+  const girlCo = {4:[22.440,0.395,0.064,0.261],5:[21.870,0.411,0.056,0.256],6:[22.210,0.421,0.048,0.251],7:[23.640,0.419,0.039,0.249],8:[21.270,0.446,0.042,0.257],9:[19.300,0.456,0.047,0.270],10:[17.400,0.482,0.046,0.265],11:[15.550,0.537,0.028,0.260],12:[14.850,0.577,0.010,0.245],13:[17.820,0.584,0.000,0.225],14:[17.870,0.594,0.000,0.219],15:[17.620,0.602,0.000,0.217],16:[17.340,0.606,0.000,0.218],17:[17.280,0.610,0.000,0.215]};
+
+  function calculate() {
+    let childHtIn, dadHtIn, momHtIn, childWtLb;
+    const childAge = parseFloat(document.getElementById('child-age')?.value);
+
+    if (unit === 'imperial') {
+      childHtIn = getIn('child-ht-ft','child-ht-in');
+      dadHtIn   = getIn('dad-ft','dad-in');
+      momHtIn   = getIn('mom-ft','mom-in');
+      childWtLb = parseFloat(document.getElementById('child-wt')?.value)||0;
+    } else {
+      childHtIn = getCm('child-ht-cm')/2.54;
+      dadHtIn   = getCm('dad-cm')/2.54;
+      momHtIn   = getCm('mom-cm')/2.54;
+      childWtLb = (parseFloat(document.getElementById('child-wt')?.value)||0)*2.20462;
+    }
+
+    if (!childAge||!childHtIn||!dadHtIn||!momHtIn||!childWtLb) { alert('Please fill in all fields.'); return; }
+    if (childAge < 4 || childAge > 17.5) { alert('This method works best for ages 4–17.'); return; }
+
+    const midParentIn = gender === 'boy' ? (dadHtIn+momHtIn+5)/2 : (dadHtIn+momHtIn-5)/2;
+    const ageKey = Math.round(Math.min(17,Math.max(4,childAge)));
+    const [b0,b1,b2,b3] = gender === 'boy' ? boyCo[ageKey] : girlCo[ageKey];
+    const predIn = b0 + b1*childHtIn + b2*childWtLb + b3*midParentIn;
+    const seIn   = gender === 'boy' ? 2.1 : 1.7;
+    const lowIn  = predIn - seIn;
+    const highIn = predIn + seIn;
+
+    document.getElementById('res-primary').textContent = fmt(predIn);
+    document.getElementById('res-alt').textContent     = unit==='metric' ? `(${toFtIn(predIn)})` : `(${Math.round(predIn*2.54)} cm)`;
+    document.getElementById('res-range').textContent   = `Likely range: ${fmt(lowIn)} – ${fmt(highIn)}`;
+    document.getElementById('bar-low').textContent     = fmt(lowIn);
+    document.getElementById('bar-high').textContent    = fmt(highIn);
+
+    const ref = gender==='boy' ? [60,76] : [58,72];
+    const pct  = ((predIn-ref[0])/(ref[1]-ref[0]))*100;
+    document.getElementById('bar-fill').style.width = Math.min(95,Math.max(5,pct))+'%';
+
+    document.getElementById('stat-midparent').textContent = fmt(midParentIn);
+    document.getElementById('stat-age').textContent       = childAge+' yrs';
+    document.getElementById('stat-range').textContent     = unit==='metric' ? `±${Math.round(seIn*2.54)} cm` : `±${seIn}″`;
+
+    const rc = document.getElementById('result-card');
+    rc.classList.add('visible');
+    rc.scrollIntoView({ behavior:'smooth', block:'nearest' });
+
+    lastResult = {
+      predicted: fmt(predIn), predictedIn: predIn,
+      range: `${fmt(lowIn)} – ${fmt(highIn)}`,
+      gender, age: childAge,
+      midParent: fmt(midParentIn),
+      childHt: fmt(childHtIn),
+      childWt: unit==='metric' ? Math.round(childWtLb/2.20462)+' kg' : Math.round(childWtLb)+' lb',
+      dadHt: fmt(dadHtIn), momHt: fmt(momHtIn),
+      date: new Date().toLocaleDateString(),
+    };
+    fetchAI(lastResult);
+  }
+
+  async function fetchAI(d) {
+    document.getElementById('ai-output').innerHTML = `<div class="ai-loading"><span>Thinking</span><span class="dots"><span>.</span><span>.</span><span>.</span></span></div>`;
+    const prompt = `A parent used a child height predictor (Khamis-Roche method) and got:
+- Child: ${d.gender}, age ${d.age}, height ${d.childHt}, weight ${d.childWt}
+- Father: ${d.dadHt}, Mother: ${d.momHt}, mid-parent: ${d.midParent}
+- Predicted adult height: ${d.predicted} (range: ${d.range})
+Write 3-4 warm sentences in plain English explaining what this means. Mention genetics, note it's an estimate, be encouraging. No bullet points. Interpret conversationally — don't just repeat numbers.`;
+
+    try {
+      // Calls the local proxy — no API key in the browser
+      const res  = await fetch('/api/claude', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
+      const json = await res.json();
+      if (json.error) throw new Error(json.error.message || json.error);
+      const text = json.content?.map(b => b.text||'').join('') || 'Unable to generate insight.';
+      document.getElementById('ai-output').innerHTML = `<p class="ai-text">${text}</p>`;
+    } catch(e) {
+      document.getElementById('ai-output').innerHTML = `<p class="ai-text" style="color:var(--text3)">Could not load AI insight. The prediction above is still valid.</p>`;
+    }
+  }
+
+  function saveResult() {
+    if (!lastResult) return;
+    const name  = document.getElementById('child-name').value.trim() || 'Child';
+    const saved = JSON.parse(localStorage.getItem('chp_saved')||'[]');
+    saved.unshift({ name, ...lastResult, id: Date.now() });
+    localStorage.setItem('chp_saved', JSON.stringify(saved.slice(0,20)));
+    renderSaved();
+    document.getElementById('child-name').value = '';
+  }
+
+  function renderSaved() {
+    const saved = JSON.parse(localStorage.getItem('chp_saved')||'[]');
+    const sec   = document.getElementById('saved-section');
+    const list  = document.getElementById('saved-list');
+    if (!saved.length) { sec.classList.remove('visible'); return; }
+    sec.classList.add('visible');
+    list.innerHTML = saved.map(s => `
+      <div class="saved-item">
+        <div>
+          <div class="saved-name">${s.name}</div>
+          <div class="saved-meta">${s.gender==='boy'?'Boy':'Girl'}, age ${s.age} · ${s.date}</div>
+        </div>
+        <div class="saved-ht">${s.predicted}</div>
+        <button class="del-btn" onclick="deleteResult(${s.id})">×</button>
+      </div>`).join('');
+  }
+
+  function deleteResult(id) {
+    let saved = JSON.parse(localStorage.getItem('chp_saved')||'[]');
+    localStorage.setItem('chp_saved', JSON.stringify(saved.filter(s=>s.id!==id)));
+    renderSaved();
+  }
+
+  function clearSaved() {
+    if (confirm('Clear all saved predictions?')) {
+      localStorage.removeItem('chp_saved');
+      renderSaved();
+    }
+  }
+
+  window.addEventListener('load', renderSaved);
+</script>
+</body>
+</html>

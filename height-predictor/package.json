@@ -1,0 +1,19 @@
+{
+  "name": "child-height-predictor",
+  "version": "1.0.0",
+  "description": "Child adult height predictor with Anthropic AI insights",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.3.1",
+    "http-proxy-middleware": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
