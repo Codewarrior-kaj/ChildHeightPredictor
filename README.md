@@ -1,12 +1,12 @@
-# Child Height Predictor
+# &#x20;A Child Height Predictor
 
 A science-backed adult height estimator using the Khamis-Roche method, with AI-powered explanations via Claude.
 
 ## How it works
 
-- **Frontend** (`public/index.html`) — pure HTML/CSS/JS, no framework
-- **Backend** (`src/server.js`) — tiny Express proxy that injects your Anthropic API key server-side
-- The browser never sees your API key. All Claude calls go through `/api/claude` on your server.
+* **Frontend** (`public/index.html`) — pure HTML/CSS/JS, no framework
+* **Backend** (`src/server.js`) — tiny Express proxy that injects your Anthropic API key server-side
+* The browser never sees your API key. All Claude calls go through `/api/claude` on your server.
 
 ## Local development
 
@@ -24,7 +24,8 @@ Open http://localhost:3000
 2. Go to railway.app → New Project → Deploy from GitHub
 3. Select your repo
 4. In Railway dashboard → Variables → add:
-   - `ANTHROPIC_API_KEY` = your key
+
+   * `ANTHROPIC\_API\_KEY` = your key
 5. Done — Railway auto-detects Node and runs `npm start`
 
 ## Deploy to Render (free tier)
@@ -33,14 +34,14 @@ Open http://localhost:3000
 2. render.com → New Web Service → connect repo
 3. Build command: `npm install`
 4. Start command: `npm start`
-5. Add environment variable: `ANTHROPIC_API_KEY`
+5. Add environment variable: `ANTHROPIC\_API\_KEY`
 
 ## Deploy to Fly.io
 
 ```bash
 npm install -g flyctl
 fly launch          # follow prompts
-fly secrets set ANTHROPIC_API_KEY=sk-ant-your-key-here
+fly secrets set ANTHROPIC\_API\_KEY=sk-ant-your-key-here
 fly deploy
 ```
 
@@ -62,3 +63,4 @@ height-predictor/
 ├── package.json
 └── README.md
 ```
+
